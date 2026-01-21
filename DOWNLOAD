@@ -1,0 +1,64 @@
+# Install the cdsapi package quietly (used to access Copernicus datasets)
+%pip -q install cdsapi
+
+
+# Import pathlib to handle filesystem paths in a safe, cross-platform way
+import pathlib
+
+# Create or overwrite the ~/.cdsapirc file in the user's home directory
+# This file stores the Copernicus API credentials required for authentication
+pathlib.Path.home().joinpath(".cdsapirc").write_text(
+"""url: https://ads.atmosphere.copernicus.eu/api
+key: 1da030e8-04a9-40bd-b256-736c73cb5fab
+"""
+)
+
+
+# Import the Copernicus Data Store API client
+import cdsapi
+
+# Define the dataset name to be used
+# This dataset provides gridded solar radiation data
+dataset = "cams-gridded-solar-radiation"
+
+# The ellipsis indicates omitted or placeholder code in the notebook
+# (kept exactly as it appears in the original file)
+...
+
+
+# Define an update function for the animation
+# This function updates the heatmap for each animation frame
+def update(i):
+    # Extract GHI data for the i-th time step
+    data = ghi_month.isel(time=i).values
+    
+    # Update the image data displayed in the plot
+    im.set_data(data)
+    
+    # Update the plot title with the current timestamp
+    title.set_text(f"GHI heatmap: {str(ghi_month['time'].values[i])}")
+    
+    # Return updated plot elements for animation
+    return [im, title]
+
+
+# 5) Animate
+# Create an animation using matplotlib's FuncAnimation
+# Each frame corresponds to one time step in the GHI dataset
+ani = animation.FuncAnimation(
+    fig,
+    update,
+    frames=ghi_month.sizes["time"],
+    interval=150,
+    blit=False
+)
+
+# Close the figure to prevent duplicate static display
+plt.close(fig)
+
+# Display the animation inline in the notebook using JavaScript
+HTML(ani.to_jshtml())
+
+
+# Save the animation as a GIF file using the Pillow writer
+ani.save("ghi_july2010.gif", writer="pillow", fps=6)
